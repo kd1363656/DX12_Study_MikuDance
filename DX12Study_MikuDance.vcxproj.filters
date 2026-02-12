@@ -4,10 +4,32 @@
     <Filter Include="Source">
       <UniqueIdentifier>{3ef2676e-1fbd-4bfb-bce6-f263902aeb61}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Asset">
+      <UniqueIdentifier>{7cd4e13e-fcbd-4a2a-80fc-8e36c166af06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Asset\Shader">
+      <UniqueIdentifier>{0a125b49-65de-4e9b-b94b-9a64c75dfb5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Asset\Shader\Basic">
+      <UniqueIdentifier>{a3900cfe-5105-4efa-89d7-8ba5d7c687d5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\main.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Asset\Shader\Basic\BasicVertexShader.hlsl">
+      <Filter>Asset\Shader\Basic</Filter>
+    </FxCompile>
+    <FxCompile Include="Asset\Shader\Basic\BasicPixelShader.hlsl">
+      <Filter>Asset\Shader\Basic</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Asset\Shader\Basic\BasicShaderHeader.hlsli">
+      <Filter>Asset\Shader\Basic</Filter>
+    </None>
   </ItemGroup>
 </Project>

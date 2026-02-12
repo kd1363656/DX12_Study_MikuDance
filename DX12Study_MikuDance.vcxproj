@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Application\Application.cpp" />
     <ClCompile Include="Source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -165,6 +166,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Asset\Shader\Basic\BasicShaderHeader.hlsli" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Application\Application.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

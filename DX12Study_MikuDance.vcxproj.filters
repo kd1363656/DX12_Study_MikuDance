@@ -13,10 +13,16 @@
     <Filter Include="Asset\Shader\Basic">
       <UniqueIdentifier>{a3900cfe-5105-4efa-89d7-8ba5d7c687d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Application">
+      <UniqueIdentifier>{a33419ce-a2ce-4f72-8711-329fcc7a45e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\main.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Application\Application.cpp">
+      <Filter>Source\Application</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -31,5 +37,10 @@
     <None Include="Asset\Shader\Basic\BasicShaderHeader.hlsli">
       <Filter>Asset\Shader\Basic</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Application\Application.h">
+      <Filter>Source\Application</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -31,9 +31,6 @@ struct Vertex
 
 using Microsoft::WRL::ComPtr;
 
-const int window_width = 1600;
-const int window_height = 800;
-
 void ShowErrorMessage(HRESULT result, ID3DBlob* errorBlob)
 {
 	if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
@@ -53,55 +50,8 @@ void ShowErrorMessage(HRESULT result, ID3DBlob* errorBlob)
 	}
 }
 
-LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-	if (msg == WM_DESTROY)
-	{
-		PostQuitMessage(0);
-		return 0;
-	}
-
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-}
-
 int main()
 {
-	// メモリリークを知らせる
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-	// COM初期化
-	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED)))
-	{
-		CoUninitialize();
-
-		return -1;
-	}
-
-	WNDCLASSEX w = {};
-	w.cbSize = sizeof(WNDCLASSEX);
-	w.lpfnWndProc = (WNDPROC)WindowProcedure;
-	w.lpszClassName = _T("DX12Sample");
-	w.hInstance = GetModuleHandle(nullptr);
-
-	RegisterClassEx(&w);
-
-	RECT wrc = { 0, 0, window_width, window_height };
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-
-	HWND hwnd = CreateWindow(w.lpszClassName,
-		_T("DX12test"),
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		wrc.right - wrc.left,
-		wrc.bottom - wrc.top,
-		nullptr,
-		nullptr,
-		w.hInstance,
-		nullptr);
-
-	ShowWindow(hwnd, SW_SHOW);
-
 	MSG msg = {};
 
 	ComPtr<ID3D12Device> mDev = nullptr;
@@ -131,9 +81,9 @@ int main()
 
 	// ファクトリーの初期化
 #ifdef _DEBUG
-	HRESULT result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(mDxgiFactory.ReleaseAndGetAddressOf()));
+	auto result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(mDxgiFactory.ReleaseAndGetAddressOf()));
 #else 
-	HRESULT result = CreateDXGIFactory1(IID_PPV_ARGS(mDxgiFactory.ReleaseAndGetAddressOf()));
+	auto result = CreateDXGIFactory1(IID_PPV_ARGS(mDxgiFactory.ReleaseAndGetAddressOf()));
 #endif
 
 	if (FAILED(result))
@@ -693,11 +643,6 @@ int main()
 
 		mSwapChain->Present(1, 0);
 	}
-
-	UnregisterClass(w.lpszClassName, w.hInstance);
-
-	// COM解放
-	CoUninitialize();
 
 	return 0;
 }

@@ -16,6 +16,7 @@
 #include <d3dcompiler.h>
 
 #include <DirectXTex.h>
+#include <d3dx12.h>
 
 #pragma comment(lib, "DirectXTex.lib")
 #pragma comment(lib, "d3d12.lib")
@@ -460,6 +461,62 @@ int main()
 	textureDescriptorRange.BaseShaderRegister = 0;
 	textureDescriptorRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+	D3D12_DESCRIPTOR_RANGE constantBufferDescriptorRange = {};
+	constantBufferDescriptorRange.NumDescriptors = 1;
+	constantBufferDescriptorRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	constantBufferDescriptorRange.BaseShaderRegister = 0;
+	constantBufferDescriptorRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	D3D12_ROOT_PARAMETER rootparam[2];
+	rootparam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootparam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootparam[0].DescriptorTable.pDescriptorRanges = &textureDescriptorRange;
+	rootparam[0].DescriptorTable.NumDescriptorRanges = 1;
+
+	rootparam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootparam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootparam[1].DescriptorTable.pDescriptorRanges = &constantBufferDescriptorRange;
+	rootparam[1].DescriptorTable.NumDescriptorRanges = 1;
+
+	// 定数バッファの作成
+	DirectX::XMMATRIX matrix = DirectX::XMMatrixIdentity();
+	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
+
+	DirectX::XMFLOAT3 eye(0.0F, 0.0F, -5.0F);
+	DirectX::XMFLOAT3 target(0.0F, 0.0F, 0.0F);
+	DirectX::XMFLOAT3 up(0.0F, 1.0F, 0.0F);
+
+	DirectX::XMMATRIX lookMatrix = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
+	DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV2, static_cast<float>(window_width) / static_cast<float>(window_height), 1.0F, 10.0F);
+
+	matrix *= worldMatrix;
+	matrix *= lookMatrix;
+	matrix *= projectionMatrix;
+
+	ComPtr<ID3D12Resource> constBuff = nullptr;
+
+	auto cD3D12HeapProperties     = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto cD3D12ResourceDescBuffer = CD3DX12_RESOURCE_DESC::Buffer((sizeof(matrix) + 0xff)  & ~0xff);
+
+	mDev->CreateCommittedResource(
+		&cD3D12HeapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&cD3D12ResourceDescBuffer,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(constBuff.ReleaseAndGetAddressOf()));
+
+	DirectX::XMMATRIX* mapMatrix = nullptr;
+	result = constBuff->Map(0, nullptr, (void**)&mapMatrix);
+	*mapMatrix = matrix;
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	cbvDesc.BufferLocation = constBuff->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = constBuff->GetDesc().Width;
+
+	basicHeapHandle.ptr += mDev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	mDev->CreateConstantBufferView(&cbvDesc, basicHeapHandle);
+
 	// 頂点レイアウトの作成
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
@@ -467,16 +524,10 @@ int main()
 		{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,D3D12_APPEND_ALIGNED_ELEMENT,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 	};
 
-	D3D12_ROOT_PARAMETER rootparam[1] = {};
-	rootparam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootparam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootparam[0].DescriptorTable.pDescriptorRanges = &textureDescriptorRange;
-	rootparam[0].DescriptorTable.NumDescriptorRanges = 1;
-
 	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	rootSignatureDesc.pParameters = rootparam;
-	rootSignatureDesc.NumParameters = 1;
+	rootSignatureDesc.NumParameters = 2;
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -608,6 +659,11 @@ int main()
 
 		mCmdList->SetDescriptorHeaps(1, basicDescHeap.GetAddressOf());
 		mCmdList->SetGraphicsRootDescriptorTable(0, basicDescHeap->GetGPUDescriptorHandleForHeapStart());
+
+		auto heapHandle = basicDescHeap->GetGPUDescriptorHandleForHeapStart();
+		heapHandle.ptr += mDev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+		mCmdList->SetGraphicsRootDescriptorTable(1, heapHandle);
 
 		mCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 

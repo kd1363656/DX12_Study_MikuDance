@@ -132,7 +132,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Application\Application.cpp" />
+    <ClCompile Include="Source\Dx12Wrapper\Dx12Wrapper.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\Render\Render.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Asset\Shader\Basic\BasicPixelShader.hlsl">
@@ -169,6 +171,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Application\Application.h" />
+    <ClInclude Include="Source\Dx12Wrapper\Dx12Wrapper.h" />
+    <ClInclude Include="Source\Render\Render.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

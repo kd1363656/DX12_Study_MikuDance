@@ -4,6 +4,9 @@
 
 #include <wrl/client.h>
 
+#include "../Render/Render.h"
+#include "../Dx12Wrapper/Dx12Wrapper.h"
+
 LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	if (msg == WM_DESTROY)
@@ -38,13 +41,50 @@ bool Application::Init()
 	{
 		CoUninitialize();
 
-		return -1;
+		return false;
 	}
 
+	if (!CreateGameWindow())
+	{
+		return false;
+	}
+
+	if (!mDX12Wrapper)
+	{
+		mDX12Wrapper = std::make_shared<Dx12Wrapper>(mHwnd);
+	}
+
+	if (!mRender)
+	{
+		mRender = std::make_shared<Render>();
+	}
+
+	return true;
 }
 
 void Application::Run()
 {
+	MSG msg = {};
+
+	while (true)
+	{
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		if (msg.message == WM_QUIT)
+		{
+			break;
+		}
+
+		mDX12Wrapper->Clear();
+		mDX12Wrapper->Update();
+		mDX12Wrapper->EndDraw();
+
+		mRender->Frame(); // ñàÉtÉåÅ[ÉÄÇ≤Ç∆Ç…åƒÇ‘
+	}
 }
 
 void Application::Terminate()
@@ -57,10 +97,11 @@ void Application::Terminate()
 
 SIZE Application::GetWindowSize() const
 {
-	return SIZE();
+	SIZE size = {window_width, window_height};
+	return size;
 }
 
-void Application::CreateGameWindow(HWND& hwnd, WNDCLASSEX& windowClass)
+bool Application::CreateGameWindow()
 {
 	mWindowClass.cbSize = sizeof(WNDCLASSEX);
 	mWindowClass.lpfnWndProc = (WNDPROC)WindowProcedure;
@@ -74,7 +115,7 @@ void Application::CreateGameWindow(HWND& hwnd, WNDCLASSEX& windowClass)
 	RECT wrc = { 0, 0, window_width, window_height };
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-	HWND hwnd = CreateWindow(mWindowClass.lpszClassName,
+	mHwnd = CreateWindow(mWindowClass.lpszClassName,
 		_T("DX12test"),
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
@@ -86,5 +127,7 @@ void Application::CreateGameWindow(HWND& hwnd, WNDCLASSEX& windowClass)
 		mWindowClass.hInstance,
 		nullptr);
 
-	ShowWindow(hwnd, SW_SHOW);
+	ShowWindow(mHwnd, SW_SHOW);
+
+	return true;
 }
